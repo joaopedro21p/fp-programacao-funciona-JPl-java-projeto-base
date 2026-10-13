@@ -1,86 +1,105 @@
+
 package exercicios;
 
-import org.hamcrest.Matchers;
-import org.junit.jupiter.api.Test;
+import exercicios.base.Aula;
 
+import java.util.Comparator;
 import java.util.List;
-import java.util.function.Function;
+import java.util.function.Predicate;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+public class Aula07 extends Aula {
 
-class Aula07Test {
-    private final Aula07 instance = new Aula07();
+    private final Predicate<Estudante> mulheresAprovadas =
+            estudante -> estudante.getSexo() == 'F'
+                    && estudante.getCurso() != null
+                    && estudante.getNota() >= 6;
 
-    private List<Estudante> callGetList(final Function<Aula07, List<Estudante>> getListMethod) {
-        final var msg = "A chamada do método para obter a lista não deveria lançar NullPointerException. Você precisa definir um predicado composto para o atributo mulheresAprovadas no lugar de null.";
-        return assertDoesNotThrow(() -> getListMethod.apply(instance), msg);
+    private final Comparator<Estudante> cursoCrescente =
+            Comparator.comparing(estudante -> estudante.getCurso().getNome());
+
+    private final Comparator<Estudante> notaCrescente =
+            Comparator.comparingDouble(Estudante::getNota);
+
+    private final Comparator<Estudante> cursoDecrescente =
+            cursoCrescente.reversed();
+
+    private final Comparator<Estudante> notaDecrescente =
+            notaCrescente.reversed();
+
+    private final Comparator<Estudante> cursoCrescenteNotaCrescente =
+            cursoCrescente.thenComparing(notaCrescente);
+
+    private final Comparator<Estudante> cursoDecrescenteNotaCrescente =
+            cursoDecrescente.thenComparing(notaCrescente);
+
+    private final Comparator<Estudante> cursoDecrescenteNotaDecrescente =
+            cursoDecrescente.thenComparing(notaDecrescente);
+
+    private final Comparator<Estudante> cursoCrescenteNotaDecrescente =
+            cursoCrescente.thenComparing(notaDecrescente);
+
+    public Aula07() {
+        System.out.println("Mulheres aprovadas: "
+                + getEstudantesMulheresAprovadas().size());
+
+        System.out.println("Ordenadas por curso e nota: "
+                + getEstudantesMulheresAprovadasOrdenadasPorCursoAndNota().size());
+
+        System.out.println("Curso decrescente e nota crescente: "
+                + getEstudantesMulheresAprovadasOrdenadasPorCursoDecrescenteAndNotaCrescente().size());
+
+        System.out.println("Lista modificável: "
+                + getEstudantesMulheresAprovadasNaoOrdenadasModificavel().size());
+
+        System.out.println("Tudo decrescente: "
+                + getEstudantesMulheresAprovadasOrdenadasTotalmenteDecrescente().size());
+
+        System.out.println("Curso crescente e nota decrescente: "
+                + getEstudantesMulheresAprovadasOrdenadasPorCursoCrescenteAndNotaDecrescente().size());
     }
 
-    private static void checkListIsUnmodifiable(final List<Estudante> list) {
-        final var ex = UnsupportedOperationException.class;
-        final var msg = "Uma %s deveria ter sido lançada ao tentar limpar a lista retornada pelo método, indicando que a lista é não-modificável";
-        assertThrows(ex, list::clear, msg.formatted(ex.getSimpleName()));
+    public static void main(String[] args) {
+        new Aula07();
     }
 
-    @Test
-    void getEstudantesMulheresAprovadasRetornaOsEstudantesEsperados() {
-        final var listaObtida = callGetList(Aula07::getEstudantesMulheresAprovadas);
-        final Integer[] idArrayObtido = listaObtida.stream().map(Estudante::getId).toArray(Integer[]::new);
-        final Integer[] idArrayEsperado = {1, 5, 15, 7, 8, 9, 6, 21, 26, 29};
-
-        assertThat(idArrayObtido, Matchers.arrayContainingInAnyOrder(idArrayEsperado));
-        checkListIsUnmodifiable(listaObtida);
+    public List<Estudante> getEstudantesMulheresAprovadas() {
+        return estudantes.stream()
+                .filter(mulheresAprovadas)
+                .toList();
     }
 
-    @Test
-    void getEstudantesMulheresAprovadasNaoOrdenadasModificavel() {
-        final var listaObtida = callGetList(Aula07::getEstudantesMulheresAprovadasNaoOrdenadasModificavel);
-        final Integer[] idArrayObtido = listaObtida.stream().map(Estudante::getId).toArray(Integer[]::new);
-        final Integer[] idArrayEsperado = {1, 5, 6, 7, 8, 9, 15, 21, 26, 29};
-
-        assertThat(idArrayObtido, Matchers.arrayContainingInAnyOrder(idArrayEsperado));
-        assertDoesNotThrow(listaObtida::clear, "A lista retornada deveria ser modificável");
+    public List<Estudante> getEstudantesMulheresAprovadasOrdenadasPorCursoAndNota() {
+        return estudantes.stream()
+                .filter(mulheresAprovadas)
+                .sorted(cursoCrescenteNotaCrescente)
+                .toList();
     }
 
-    @Test
-    void getEstudantesMulheresAprovadasOrdenadasPorCursoAndNota(){
-        final var listaObtida = callGetList(Aula07::getEstudantesMulheresAprovadasOrdenadasPorCursoAndNota);
-        final Integer[] idArrayObtido = listaObtida.stream().map(Estudante::getId).toArray(Integer[]::new);
-        final Integer[] idArrayEsperado = {5, 15, 29, 9, 7, 26, 8, 21, 6, 1};
-        final var msg = "A lista retornada deveria estar ordenada por nome do curso e nota";
-        assertThat(msg, idArrayObtido, Matchers.arrayContaining(idArrayEsperado));
-        checkListIsUnmodifiable(listaObtida);
+    public List<Estudante> getEstudantesMulheresAprovadasOrdenadasPorCursoDecrescenteAndNotaCrescente() {
+        return estudantes.stream()
+                .filter(mulheresAprovadas)
+                .sorted(cursoDecrescenteNotaCrescente)
+                .toList();
     }
 
-    @Test
-    void getEstudantesMulheresAprovadasOrdenadasPorCursoDecrescenteAndNotaCrescente(){
-        final var listaObtida = callGetList(Aula07::getEstudantesMulheresAprovadasOrdenadasPorCursoDecrescenteAndNotaCrescente);
-        final Integer[] idArrayObtido = listaObtida.stream().map(Estudante::getId).toArray(Integer[]::new);
-        final Integer[] idArrayEsperado = {21, 6, 1, 8, 7, 26, 15, 29, 9, 5};
-        final var msg = "A lista retornada deveria estar em ordem decrescente por nome do curso e crescente por nota";
-        assertThat(msg, idArrayObtido, Matchers.arrayContaining(idArrayEsperado));
-        checkListIsUnmodifiable(listaObtida);
+    public List<Estudante> getEstudantesMulheresAprovadasNaoOrdenadasModificavel() {
+        return estudantes.stream()
+                .filter(mulheresAprovadas)
+                .collect(java.util.stream.Collectors.toCollection(
+                        java.util.ArrayList::new));
     }
 
-    @Test
-    void getEstudantesMulheresAprovadasOrdenadasTotalmenteDecrescente(){
-        final var listaObtida = callGetList(Aula07::getEstudantesMulheresAprovadasOrdenadasTotalmenteDecrescente);
-        final Integer[] idArrayObtido = listaObtida.stream().map(Estudante::getId).toArray(Integer[]::new);
-        final Integer[] idArrayEsperado = {1, 6, 21, 8, 26, 7, 9, 29, 15, 5};
-        final var msg = "A lista retornada deveria estar em ordem decrescente tanto por curso quanto por nota";
-        assertThat(msg, idArrayObtido, Matchers.arrayContaining(idArrayEsperado));
-        checkListIsUnmodifiable(listaObtida);
+    public List<Estudante> getEstudantesMulheresAprovadasOrdenadasTotalmenteDecrescente() {
+        return estudantes.stream()
+                .filter(mulheresAprovadas)
+                .sorted(cursoDecrescenteNotaDecrescente)
+                .toList();
     }
 
-    @Test
-    void getEstudantesMulheresAprovadasOrdenadasPorCursoCrescenteAndNotaDecrescente(){
-        final var listaObtida = callGetList(Aula07::getEstudantesMulheresAprovadasOrdenadasPorCursoCrescenteAndNotaDecrescente);
-        final Integer[] idArrayObtido = listaObtida.stream().map(Estudante::getId).toArray(Integer[]::new);
-        final Integer[] idArrayEsperado = {5, 9, 29, 15, 26, 7, 8, 1, 6, 21};
-        final var msg = "A lista retornada deveria estar em ordem crescente por nome do curso e descrescente pela nota";
-        assertThat(msg, idArrayObtido, Matchers.arrayContaining(idArrayEsperado));
-        checkListIsUnmodifiable(listaObtida);
+    public List<Estudante> getEstudantesMulheresAprovadasOrdenadasPorCursoCrescenteAndNotaDecrescente() {
+        return estudantes.stream()
+                .filter(mulheresAprovadas)
+                .sorted(cursoCrescenteNotaDecrescente)
+                .toList();
     }
 }
